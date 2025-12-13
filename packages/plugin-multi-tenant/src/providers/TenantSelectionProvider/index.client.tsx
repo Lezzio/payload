@@ -2,7 +2,7 @@
 
 import type { OptionObject } from 'payload'
 
-import { toast, useAuth, useConfig } from '@payloadcms/ui'
+import { toast, useAuth, useConfig, useDocumentEvents } from '@payloadcms/ui'
 import { useRouter } from 'next/navigation.js'
 import React, { createContext } from 'react'
 
@@ -252,6 +252,16 @@ export const TenantSelectionProviderClient = ({
       })
     }
   }, [selectedTenantID, tenantOptions, entityType, setTenant])
+
+  // Listen for document events to sync tenant options when tenants are created/updated
+  const { mostRecentUpdate } = useDocumentEvents() as {
+    mostRecentUpdate: { entitySlug: string; id?: number | string; updatedAt: string } | null
+  }
+  React.useEffect(() => {
+    if (mostRecentUpdate?.entitySlug === tenantsCollectionSlug) {
+      void syncTenants()
+    }
+  }, [mostRecentUpdate, tenantsCollectionSlug, syncTenants])
 
   return (
     <span
